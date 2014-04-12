@@ -26,7 +26,7 @@
 \tikzstyle{yellowred}=[fill, left color=yellow, right color=red, shading angle=45]
 
 \begin{document}
-\begin{tikzpicture}[framed, background rectangle/.style={thin, fill=black!5}]
+\begin{tikzpicture}[framed, background rectangle/.style={thin, top color=black!80, bottom color=black!0}]
     \begin{pgfonlayer}{bglower}
         \begin{scope}
             \node[anchor=west, blue,  minimum width=2cm, circle] (c1) [left color=blue, right
@@ -48,12 +48,12 @@
     \setlength{\firstscope}{\XCoord}
     % fake scope
     \begin{scope}[opacity=0.0, overlay]
-        \node[anchor=west, rectangle, draw, black, minimum width=1cm, minimum height=1cm] (f1) {};
-        \node[rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f1.west, xshift=0.5mm] (f2) {};
-        \node[rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f1.west, xshift=2cm] (f3) {};
-        \node[rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f3.west, xshift=0.5mm] (f4) {};
-        \node[rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f3.west, xshift=2cm] (f5) {};
-        \node[rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f5.west, xshift=0.5mm] (f6) {};
+        \node[overlay, anchor=west, rectangle, draw, black, minimum width=1cm, minimum height=1cm] (f1) {};
+        \node[overlay, rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f1.west, xshift=0.5mm] (f2) {};
+        \node[overlay, rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f1.west, xshift=2cm] (f3) {};
+        \node[overlay, rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f3.west, xshift=0.5mm] (f4) {};
+        \node[overlay, rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f3.west, xshift=2cm] (f5) {};
+        \node[overlay, rectangle, draw, black, minimum width=1cm, minimum height=1cm, right=of f5.west, xshift=0.5mm] (f6) {};
     \end{scope}
     \coordinate (width2) at ($(f6.east)-(f1.west)$);
     \ExtractCoordinate{width2}
