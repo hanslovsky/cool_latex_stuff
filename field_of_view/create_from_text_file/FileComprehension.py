@@ -1,14 +1,18 @@
 import xmldict # pip install xmldict
 import json # built-in
 import types # built-in
+import copy
 
 class TexDefaultOptions(object):
     defaultOptions = {'general' : {
         'indent' : 0,
         'indentStep' : 4,
-        'tikzpicture' : {},
+        'tikzpicture' : {
+            'framed' : None,
+            'background rectangle/.style' : '{thin, top color=black!80, bottom color=black!0}'
+        },
         'scale' : '1.0\\linewidth',
-        'packages' : [('','tikz')],
+        'packages' : [('','tikz'), ('', 'pgf')],
         'tikzlibraries' : 'fit,calc,positioning,backgrounds',
         'layers' : 'background,lower,upper,main'
     },
@@ -31,11 +35,12 @@ class TexDefaultOptions(object):
         'options' : {},
     },
     'fieldOfViewScope' : {
+        'layer' : 'upper',
         'options' : {},
         'scope' : {
             'options' : {
                 'opacity' : 1.0,
-                'yshift' : '-2cm'
+                'yshift' : '-10cm'
             }
         },
         'lines' : {
@@ -57,7 +62,7 @@ class TexDefaultOptions(object):
                 }
             }
         },
-        'fakeNameBase' : 'fieldOfView',
+        'fakeNameBase' : 'fake',
         'nodeNameBase' : 'fieldOfView',
     },
     'overlay' : {
@@ -157,7 +162,9 @@ class OptionParser(object):
     @staticmethod
     def parseFieldOfViewScopeOptions(fieldOfViewScopeOptions):
         keyValuePairs = []
-        for line, lineContent in fieldOfViewScopeOptions['lines'].iteritems():
+        fakeKeyValuePairs = []
+        for idx, (line, lineContent) in enumerate(sorted(fieldOfViewScopeOptions['lines'].iteritems(),
+                                                         key=lambda x: int(x[0]))):
             generalLineOptions = dict(fieldOfViewScopeOptions['options'])
             TexDefaultOptions.merge(lineContent['options'], generalLineOptions)
             lineContent['options'] = generalLineOptions
@@ -168,13 +175,22 @@ class OptionParser(object):
                 generalImageOptions = dict(lineContent['options'])
                 TexDefaultOptions.merge(options['options'], generalImageOptions)
                 options['options'] = generalImageOptions
-                keyValuePairs.append((image, options))
                 if prevKey > -1:
                     options['options']['right'] = 'of %s%d' % (fieldOfViewScopeOptions['nodeNameBase'], prevKey)
+                if idx == 0:
+                    fakeOptions = copy.deepcopy(options)
+                    fakeOptions['nodeName'] = fieldOfViewScopeOptions['fakeNameBase'] + str(options['index'])
+                    if prevKey > -1:
+                        fakeOptions['options']['right'] = 'of %s%d' % (fieldOfViewScopeOptions['fakeNameBase'], prevKey)
+                    fakeKeyValuePairs.append((image, fakeOptions))
+                keyValuePairs.append((image, options))
                 prevKey = int(options['index'])
         fieldOfViewScopeOptions['images'] = {}
+        fieldOfViewScopeOptions['fakes']  = {}
         for key, value in keyValuePairs:
             fieldOfViewScopeOptions['images'][key] = value
+        for key, value in fakeKeyValuePairs:
+            fieldOfViewScopeOptions['fakes'][key] = value
 
 
     @staticmethod
