@@ -41,7 +41,7 @@ class TexDefaultOptions(object):
         'scope' : {
             'options' : {
                 'opacity' : 1.0,
-                'yshift' : '-30cm'
+                'yshift' : '-15cm'
             }
         },
         'lines' : {
