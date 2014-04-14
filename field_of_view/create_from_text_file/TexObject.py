@@ -31,6 +31,7 @@ class TexHelper(object):
                                                                                str(nodeIndex),
                                                                                str(filename))
 
+
     @staticmethod
     def createLayerString(layerList):
         resultString = ''
@@ -56,6 +57,24 @@ class TexHelper(object):
         for library in librariesList.split(','):
             resultString += '\usetikzlibrary{%s}\n' % library
         return resultString
+
+
+class TexEnvironmentCreator(object):
+    @staticmethod
+    def begin(environment, additionalString):
+        return '\\begin{%s}%s' % (environment, additionalString)
+
+    @staticmethod
+    def end(environment):
+        return '\\end{%s}' % environment
+
+    def __init__(self, environmentCreators, environmentContent):
+        self.innerEnvironments = environmentCreators
+        self.content = environmentContent
+
+    def getEnvironment(self):
+        return self.content % tuple(x.getEnvironment() for x in self.innerEnvironments)
+
 
 
 class TexObject(object):
@@ -297,7 +316,81 @@ class TexStandaloneDecorator(TexObject):
                      TexHelper.createLayerString(self.texOptions['layers']),
                      texMaster.toString())
         return res_string
+
+
+class TexOverlayScope(TexObject):
+    def __init__(self, options):
+        super(TexOverlayScope, self).__init__(options)
+
+    def _composeString(self):
+        resString  = self._createIndicators() + '\n'
+        resString += self._createFrames() + '\n'
+        resString += self._createConnectors() + '\n'
+        return resString
+
+    def _createIndicators(self):
+        scopeEnvironments = []
+        relPos = self.texOptions['relativeIndicatorPosition']
+        relRes = self.texOptions['relativeIndicatorResolution']
+        for pair, values in self.texOptions['pairs'].iteritems():
+            scopeOptions = dict(self.texOptions['scope']['options'])
+            scopeOptions['x'] = '($(%s.south east)-(%s.south west)$)' % (values['nodeFrom'], values['nodeFrom'])
+            scopeOptions['y'] = '($(%s.north west)-(%s.south west)$)' % (values['nodeFrom'], values['nodeFrom'])
+            scopeString = '''
+%s%s
+%s\\draw[red, ultra thick, opacity=0.7] ($%s+(%s.south west)$) rectangle ($%s+(%s.south west)$);
+%s%s
+''' % (TexHelper.createIndentString(self.texOptions['indentStep']),
+       TexEnvironmentCreator.begin('scope', TexHelper.composeOptions(scopeOptions)),
+       TexHelper.createIndentString(2*self.texOptions['indentStep']),
+       relPos,
+       values['nodeFrom'],
+       (relPos[0] + relRes[0], relPos[1] + relRes[1]),
+       values['nodeFrom'],
+       TexHelper.createIndentString(self.texOptions['indentStep']),
+       TexEnvironmentCreator.end('scope'))
+            scopeEnvironments.append(TexEnvironmentCreator([], scopeString))
+
+        pgfLayerString  = '%s\n' % TexEnvironmentCreator.begin('pgfonlayer', '{%s}' % self.texOptions['indicatorLayer'])
+        pgfLayerString += '\n'.join(['%s'] * len(scopeEnvironments)) + '\n'
+        pgfLayerString += '%s\n' % TexEnvironmentCreator.end('pgfonlayer')
+        pgfLayer = TexEnvironmentCreator(scopeEnvironments, pgfLayerString)
+            
+        return pgfLayer.getEnvironment()
+
+    def _createFrames(self):
+        scopeEnvironments = []
+        scopeString = '\n'
+        for pair, values in self.texOptions['pairs'].iteritems():
+            values['frameOptions']['fit'] = '(%s)' % values['nodeTo']
+            scopeString += '%s\\node%s (%s%s) {};\n' % (TexHelper.createIndentString(2*self.texOptions['indentStep']),
+                                                        TexHelper.composeOptions(values['frameOptions']),
+                                                        self.texOptions['frameNameBase'],
+                                                        pair[1])
+        scopeEnvironmentString = '''     
+%s%s
+%s
+%s%s
+''' % (TexHelper.createIndentString(self.texOptions['indentStep']),
+       TexEnvironmentCreator.begin('scope', TexHelper.composeOptions(self.texOptions['scope']['options'])),     
+       '%s',
+       TexHelper.createIndentString(self.texOptions['indentStep']),
+       TexEnvironmentCreator.end('scope'))
+        scopeEnvironments.append(TexEnvironmentCreator([TexEnvironmentCreator([], scopeString)], scopeEnvironmentString))
+        layerEnvironmentString = '''
+%s
+%s
+%s
+''' % (TexEnvironmentCreator.begin('pgfonlayer', '{%s}' % self.texOptions['frameLayer']),
+       '%s',
+       TexEnvironmentCreator.end('pgfonlayer'))
+
+        return TexEnvironmentCreator(scopeEnvironments, layerEnvironmentString).getEnvironment()
         
+
+    def _createConnectors(self):
+        return ''
+
 
 
 
@@ -331,7 +424,7 @@ if __name__ == "__main__":
     #     'layer' : 'blalayer'})
     texMaster = TexMaster(TexCompleteScope(parsedOptions['completeScope']),
                           TexFieldOfViewScope(parsedOptions['fieldOfViewScope']),
-                          TexObject(parsedOptions['overlay']),
+                          TexOverlayScope(parsedOptions['overlay']),
                           parsedOptions['general']
                           )
     standalone = TexStandaloneDecorator(texMaster, parsedOptions['general'])

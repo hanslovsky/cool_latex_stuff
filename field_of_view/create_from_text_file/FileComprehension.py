@@ -14,10 +14,11 @@ class TexDefaultOptions(object):
         'scale' : '1.0\\linewidth',
         'packages' : [('','tikz'), ('', 'pgf')],
         'tikzlibraries' : 'fit,calc,positioning,backgrounds',
-        'layers' : 'background,lower,upper,main'
+        'layers' : 'background,lower,middle,upper,main'
     },
     'completeScope' : {
         'layer' : 'lower',
+        'imageResolution' : (1600, 1097),
         'scope' : {
             'options' : {
                 'opacity' : 1.0
@@ -40,23 +41,23 @@ class TexDefaultOptions(object):
         'scope' : {
             'options' : {
                 'opacity' : 1.0,
-                'yshift' : '-10cm'
+                'yshift' : '-30cm'
             }
         },
         'lines' : {
             1 : {
                 'options' : {},
                 'images' : {
-                    'example_images/arnie.jpg' : {
+                    'example_images/arnie_ex.jpg' : {
                         'index' : 1, 'options' : {}
                     },
-                    'example_images/arnie2.jpg' : {
+                    'example_images/arnie_ex2.jpg' : {
                         'index' : 2, 'options' : {}
                     },
-                    'example_images/arnie3.jpg' : {
+                    'example_images/arnie_ex3.jpg' : {
                         'index' : 3, 'options' : {}
                     },
-                    'example_images/arnie4.jpg' : {
+                    'example_images/arnie_ex4.jpg' : {
                         'index' : 4, 'options' : {}
                     }
                 }
@@ -66,22 +67,30 @@ class TexDefaultOptions(object):
         'nodeNameBase' : 'fieldOfView',
     },
     'overlay' : {
+        'frameLayer' : 'upper',
+        'indicatorLayer' : 'upper',
+        'connectorLayer' : 'middle',
         'scope' : {
             'options' : {
                 'overlay' : None
             }
         },
         'options' : {
-            'opacity' : 0.3,
-            'color' : 'red!30'
+            'opacity' : 0.5,
+            'color' : 'red',
+            'inner sep' : 0,
+            'draw' : None,
+            'ultra thick' : None
         },
         'pairs' : {
             (1,1) : { 'frameOptions' : {}, 'connectorOptions' : {}},
             (2,4) : { 'frameOptions' : {}, 'connectorOptions' : {}}
         },
-        'bend' : 0,
+        'bend' : 30,
         'indicatorNameBase' : 'indicator',
-        'frameNameBase' : 'frame'
+        'frameNameBase' : 'frame',
+        'indicatorResolution' : (200, 200),
+        'indicatorPosition' : (70, 70)
     }
     }
         
@@ -141,7 +150,7 @@ class OptionParser(object):
         fieldOfViewScopeOptions = options['fieldOfViewScope']
         OptionParser.parseFieldOfViewScopeOptions(fieldOfViewScopeOptions)
         overlayOptions = options['overlay']
-        OptionParser.parseOverlayOptions(overlayOptions, completeScopeOptions['images'], fieldOfViewScopeOptions['images'])
+        OptionParser.parseOverlayOptions(overlayOptions, completeScopeOptions, fieldOfViewScopeOptions)
 
         return options
 
@@ -194,19 +203,35 @@ class OptionParser(object):
 
 
     @staticmethod
-    def parseOverlayOptions(overlayOptions, completeScopeImages, fieldOfViewImages):
+    def parseOverlayOptions(overlayOptions, completeScopeOptions, fieldOfViewOptions):
+        completeScopeImages = completeScopeOptions['images']
+        fieldOfViewImages   = fieldOfViewOptions['images']
         pairs = overlayOptions['pairs']
-        for idx, (pair, options) in enumerate(pairs.iteritems()):
+        nPairs = len(pairs.keys())
+        start = overlayOptions['bend']
+        if int(start) == 0:
+            bendValues = [0]*nPairs
+        else:
+            step = 2.0*start/float(nPairs-1)
+            def frange(start, stop, step):
+                while start < stop:
+                    yield start
+                    start += step
+            bendValues = [int(x) for x in frange(-start, start+step, step)]
+        assert str(len(bendValues)) + " bend values, but " + str(nPairs) + "  pairs" and len(bendValues) == nPairs
+        for idx, (pair, options) in enumerate(sorted(pairs.iteritems(),key=lambda x: int(x[0][0]))):
             generalPairOptions = dict(overlayOptions['options'])
             TexDefaultOptions.merge(options['frameOptions'], generalPairOptions)
             options['frameOptions'] = generalPairOptions
             generalPairOptions = dict(overlayOptions['options'])
             TexDefaultOptions.merge(options['connectorOptions'], generalPairOptions)
             options['connectorOptions'] = generalPairOptions
+            options['connectorOptions']['bend left'] = bendValues[idx]
             def findNodeName(query, nodeDict):
                 if type(query) == int:
                     res = [x for x in nodeDict.iteritems() if x[1]['index'] == query]
                 elif type(query) == str:
+                    raise Exception, "Does not support string as index for nodes"
                     res = [x for x in nodeDict.iteritems() if x[0] == query]
                 else:
                     raise Exception("I don't understand the type!")
@@ -216,6 +241,13 @@ class OptionParser(object):
             options['nodeFrom'] = findNodeName(pair[0], completeScopeImages)
             options['nodeTo']   = findNodeName(pair[1], fieldOfViewImages)
             options['indicatorName'] = overlayOptions['indicatorNameBase'] + str(idx)
+            overlayOptions['relativeIndicatorPosition'] = \
+              (float(overlayOptions['indicatorPosition'][0])/completeScopeOptions['imageResolution'][0],
+               float(overlayOptions['indicatorPosition'][1])/completeScopeOptions['imageResolution'][1])
+            overlayOptions['relativeIndicatorResolution'] = \
+              (float(overlayOptions['indicatorResolution'][0])/completeScopeOptions['imageResolution'][0],
+               float(overlayOptions['indicatorResolution'][1])/completeScopeOptions['imageResolution'][1])
+                                                              
             options['frameName'] = overlayOptions['frameNameBase'] + str(idx)
             # calculate relative position in image!
             # calculate bend!
