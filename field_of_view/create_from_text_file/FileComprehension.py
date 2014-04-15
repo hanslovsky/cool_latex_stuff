@@ -28,9 +28,9 @@ class TexDefaultOptions(object):
             'example_images/arnie.jpg' : {
                 'index' : 1, 'options' : {}
             },
-            # 'example_images/arnie2.jpg' : {
-            #     'index' : 2, 'options' : {}
-            # },
+            'example_images/arnie2.jpg' : {
+                'index' : 2, 'options' : {}
+            },
             'example_images/arnie3.jpg' : {
                 'index' : 3, 'options' : {}
             }
@@ -63,6 +63,57 @@ class TexDefaultOptions(object):
                     'example_images/arnie_vein4.jpg' : {
                         'index' : 4, 'options' : {}
                     }
+                    ,
+                    'example_images/arnie_vein5.jpg' : {
+                        'index' : 5, 'options' : {}
+                    }
+                    ,
+                    'example_images/arnie_vein6.jpg' : {
+                        'index' : 6, 'options' : {}
+                    }
+                    ,
+                    'example_images/arnie_vein7.jpg' : {
+                        'index' : 7, 'options' : {}
+                    }
+                    ,
+                    'example_images/arnie_vein8.jpg' : {
+                        'index' : 8
+                        , 'options' : {}
+                    }
+                }
+            },
+        2 : {
+                'options' : {},
+                'images' : {
+                    'example_images/arnie_ex1.jpg' : {
+                        'index' : 1+8, 'options' : {'anchor' : 'north west'}
+                    },
+                    'example_images/arnie_ex2.jpg' : {
+                        'index' : 2+8, 'options' : {}
+                    },
+                    'example_images/arnie_ex3.jpg' : {
+                        'index' : 3+8, 'options' : {}
+                    },
+                    'example_images/arnie_ex4.jpg' : {
+                        'index' : 4+8, 'options' : {}
+                    }
+                    ,
+                    'example_images/arnie_ex5.jpg' : {
+                        'index' : 5+8, 'options' : {}
+                    }
+                    ,
+                    'example_images/arnie_ex6.jpg' : {
+                        'index' : 6+8, 'options' : {}
+                    }
+                    ,
+                    'example_images/arnie_ex7.jpg' : {
+                        'index' : 7+8, 'options' : {}
+                    }
+                    ,
+                    'example_images/arnie_ex8.jpg' : {
+                        'index' : 8+8
+                        , 'options' : {}
+                    }
                 }
             }
         },
@@ -88,9 +139,10 @@ class TexDefaultOptions(object):
         },
         'pairs' : {
             (1,1) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}},
-            (3,4) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}}
+            (2,3) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}},
+            (3,8) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}}
         },
-        'bend' : 11,
+        'bend' : 0,
         'indicatorNameBase' : 'indicator',
         'frameNameBase' : 'frame',
         'indicatorResolution' : (200, 200),
