@@ -319,10 +319,10 @@ class TexStandaloneDecorator(TexObject):
 
 
 class TexOverlayScope(TexObject):
-    _correspondences = {('SouthWest', 'SouthEast') : ('south west', 'south east'),
-                        ('SouthEast', 'NorthEast') : ('south east', 'north east'),
-                        ('NorthEast', 'NorthWest') : ('north east', 'north west'),
-                        ('NorthWest', 'SouthWest') : ('north west', 'south west')
+    _correspondences = {(2, 'SouthWest', 'SouthEast') : ('south west', 'south east'),
+                        (3, 'SouthEast', 'NorthEast') : ('south east', 'north east'),
+                        (4, 'NorthEast', 'NorthWest') : ('north east', 'north west'),
+                        (1, 'NorthWest', 'SouthWest') : ('north west', 'south west')
                         }
 
     def __init__(self, options):
@@ -415,12 +415,12 @@ class TexOverlayScope(TexObject):
     def _createConnectors(self):
         connectorString = ''
         for pair, values in self.texOptions['pairs'].iteritems():
-            for indicator, frame in TexOverlayScope._correspondences.iteritems():
+            for indicator, frame in sorted(TexOverlayScope._correspondences.iteritems(), key=lambda x: x[0][0]):
                 connectorString += '''%s\path%s (%s%s%s) to[bend left=%s] (%s%s.%s) to (%s%s.%s) to[bend right=%s] (%s%s%s);
 ''' % (TexHelper.createIndentString(2*self.texOptions['indentStep']),
        TexHelper.composeOptions(values['connectorOptions']['options']),
        self.texOptions['indicatorNameBase'],
-       indicator[0],
+       indicator[1],
        pair[0],
        values['connectorOptions']['bend'],
        self.texOptions['frameNameBase'],
@@ -431,7 +431,7 @@ class TexOverlayScope(TexObject):
        frame[1],
        values['connectorOptions']['bend'],
        self.texOptions['indicatorNameBase'],
-       indicator[1],
+       indicator[2],
        pair[0])
 
         scopeString  = TexHelper.createIndentString(self.texOptions['indentStep'])
