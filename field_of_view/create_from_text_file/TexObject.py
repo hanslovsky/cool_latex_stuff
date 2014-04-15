@@ -319,6 +319,12 @@ class TexStandaloneDecorator(TexObject):
 
 
 class TexOverlayScope(TexObject):
+    _correspondences = {('SouthWest', 'SouthEast') : ('south west', 'south east'),
+                        ('SouthEast', 'NorthEast') : ('south east', 'north east'),
+                        ('NorthEast', 'NorthWest') : ('north east', 'north west'),
+                        ('NorthWest', 'SouthWest') : ('north west', 'south west')
+                        }
+
     def __init__(self, options):
         super(TexOverlayScope, self).__init__(options)
 
@@ -332,13 +338,28 @@ class TexOverlayScope(TexObject):
         scopeEnvironments = []
         relPos = self.texOptions['relativeIndicatorPosition']
         relRes = self.texOptions['relativeIndicatorResolution']
+        coordinates = {}
+        coordinates['SouthWest'] = (min(relPos[0], relPos[0] + relRes[0]), min(relPos[1], relPos[1] + relRes[1]))
+        coordinates['SouthEast'] = (max(relPos[0], relPos[0] + relRes[0]), min(relPos[1], relPos[1] + relRes[1]))
+        coordinates['NorthEast'] = (max(relPos[0], relPos[0] + relRes[0]), max(relPos[1], relPos[1] + relRes[1]))
+        coordinates['NorthWest'] = (min(relPos[0], relPos[0] + relRes[0]), max(relPos[1], relPos[1] + relRes[1]))
         for pair, values in self.texOptions['pairs'].iteritems():
+            coordinateString = ''
+            for key, value in coordinates.iteritems():
+                coordinateString += '''%s\\coordinate (%s%s%s) at ($(%s.south west)+%s$);\n
+''' % (TexHelper.createIndentString(2*self.texOptions['indentStep']),
+       self.texOptions['indicatorNameBase'],
+       key,
+       pair[0],
+       values['nodeFrom'],
+       value)
             scopeOptions = dict(self.texOptions['scope']['options'])
             scopeOptions['x'] = '($(%s.south east)-(%s.south west)$)' % (values['nodeFrom'], values['nodeFrom'])
             scopeOptions['y'] = '($(%s.north west)-(%s.south west)$)' % (values['nodeFrom'], values['nodeFrom'])
             scopeString = '''
 %s%s
 %s\\draw[red, ultra thick, opacity=0.7] ($%s+(%s.south west)$) rectangle ($%s+(%s.south west)$);
+%s
 %s%s
 ''' % (TexHelper.createIndentString(self.texOptions['indentStep']),
        TexEnvironmentCreator.begin('scope', TexHelper.composeOptions(scopeOptions)),
@@ -347,9 +368,12 @@ class TexOverlayScope(TexObject):
        values['nodeFrom'],
        (relPos[0] + relRes[0], relPos[1] + relRes[1]),
        values['nodeFrom'],
+       coordinateString,
        TexHelper.createIndentString(self.texOptions['indentStep']),
        TexEnvironmentCreator.end('scope'))
+
             scopeEnvironments.append(TexEnvironmentCreator([], scopeString))
+            
 
         pgfLayerString  = '%s\n' % TexEnvironmentCreator.begin('pgfonlayer', '{%s}' % self.texOptions['indicatorLayer'])
         pgfLayerString += '\n'.join(['%s'] * len(scopeEnvironments)) + '\n'
@@ -389,7 +413,40 @@ class TexOverlayScope(TexObject):
         
 
     def _createConnectors(self):
-        return ''
+        connectorString = ''
+        for pair, values in self.texOptions['pairs'].iteritems():
+            for indicator, frame in TexOverlayScope._correspondences.iteritems():
+                connectorString += '''%s\path%s (%s%s%s) to[bend left=%s] (%s%s.%s) to (%s%s.%s) to[bend right=%s] (%s%s%s);
+''' % (TexHelper.createIndentString(2*self.texOptions['indentStep']),
+       TexHelper.composeOptions(values['connectorOptions']['options']),
+       self.texOptions['indicatorNameBase'],
+       indicator[0],
+       pair[0],
+       values['connectorOptions']['bend'],
+       self.texOptions['frameNameBase'],
+       pair[1],
+       frame[0],
+       self.texOptions['frameNameBase'],
+       pair[1],
+       frame[1],
+       values['connectorOptions']['bend'],
+       self.texOptions['indicatorNameBase'],
+       indicator[1],
+       pair[0])
+
+        scopeString  = TexHelper.createIndentString(self.texOptions['indentStep'])
+        scopeString += TexEnvironmentCreator.begin('scope', TexHelper.composeOptions(self.texOptions['scope']['options']))
+        scopeString += '\n%s\n'
+        scopeString += TexHelper.createIndentString(self.texOptions['indentStep'])
+        scopeString += TexEnvironmentCreator.end('scope') + '\n'
+
+        pgfLayerString  = TexEnvironmentCreator.begin('pgfonlayer', '{%s}' % self.texOptions['connectorLayer']) + '\n'
+        pgfLayerString += '\n%s\n'
+        pgfLayerString += TexEnvironmentCreator.end('pgfonlayer') + '\n'
+
+        scope = [TexEnvironmentCreator([TexEnvironmentCreator([], connectorString)], scopeString)]
+
+        return TexEnvironmentCreator(scope, pgfLayerString).getEnvironment()
 
 
 

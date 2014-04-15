@@ -28,8 +28,11 @@ class TexDefaultOptions(object):
             'example_images/arnie.jpg' : {
                 'index' : 1, 'options' : {}
             },
-            'example_images/arnie2.jpg' : {
-                'index' : 2, 'options' : {}
+            # 'example_images/arnie2.jpg' : {
+            #     'index' : 2, 'options' : {}
+            # },
+            'example_images/arnie3.jpg' : {
+                'index' : 3, 'options' : {}
             }
         },
         'nodeNameBase' : 'completeView',
@@ -41,23 +44,23 @@ class TexDefaultOptions(object):
         'scope' : {
             'options' : {
                 'opacity' : 1.0,
-                'yshift' : '-15cm'
+                'yshift' : '-25cm'
             }
         },
         'lines' : {
             1 : {
                 'options' : {},
                 'images' : {
-                    'example_images/arnie_ex.jpg' : {
+                    'example_images/arnie_vein1.jpg' : {
                         'index' : 1, 'options' : {}
                     },
-                    'example_images/arnie_ex2.jpg' : {
+                    'example_images/arnie_vein2.jpg' : {
                         'index' : 2, 'options' : {}
                     },
-                    'example_images/arnie_ex3.jpg' : {
+                    'example_images/arnie_vein3.jpg' : {
                         'index' : 3, 'options' : {}
                     },
-                    'example_images/arnie_ex4.jpg' : {
+                    'example_images/arnie_vein4.jpg' : {
                         'index' : 4, 'options' : {}
                     }
                 }
@@ -72,25 +75,26 @@ class TexDefaultOptions(object):
         'connectorLayer' : 'middle',
         'scope' : {
             'options' : {
-                'overlay' : None
+                'overlay' : None,
+                'opacity' : 0.5
             }
         },
         'options' : {
-            'opacity' : 0.5,
-            'color' : 'red',
+            'fill' : 'red!50',
+            'color' : 'black',
             'inner sep' : 0,
             'draw' : None,
             'ultra thick' : None
         },
         'pairs' : {
-            (1,1) : { 'frameOptions' : {}, 'connectorOptions' : {}},
-            (2,4) : { 'frameOptions' : {}, 'connectorOptions' : {}}
+            (1,1) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}},
+            (3,4) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}}
         },
-        'bend' : 30,
+        'bend' : 11,
         'indicatorNameBase' : 'indicator',
         'frameNameBase' : 'frame',
         'indicatorResolution' : (200, 200),
-        'indicatorPosition' : (70, 70)
+        'indicatorPosition' : (70+200, 70+200)
     }
     }
         
@@ -224,9 +228,12 @@ class OptionParser(object):
             TexDefaultOptions.merge(options['frameOptions'], generalPairOptions)
             options['frameOptions'] = generalPairOptions
             generalPairOptions = dict(overlayOptions['options'])
-            TexDefaultOptions.merge(options['connectorOptions'], generalPairOptions)
-            options['connectorOptions'] = generalPairOptions
-            options['connectorOptions']['bend left'] = bendValues[idx]
+            TexDefaultOptions.merge(options['connectorOptions']['options'], generalPairOptions)
+            options['connectorOptions']['options'] = generalPairOptions
+            options['connectorOptions']['bend'] = bendValues[idx]
+            generalPairOptions = dict(overlayOptions['options'])
+            TexDefaultOptions.merge(options['indicatorOptions'], generalPairOptions)
+            options['indicatorOptions'] = generalPairOptions
             def findNodeName(query, nodeDict):
                 if type(query) == int:
                     res = [x for x in nodeDict.iteritems() if x[1]['index'] == query]
