@@ -44,12 +44,13 @@ class TexDefaultOptions(object):
         'scope' : {
             'options' : {
                 'opacity' : 1.0,
-                'yshift' : '-25cm'
+                'yshift' : '-15cm'
             }
         },
         'lines' : {
             1 : {
                 'options' : {},
+                'scopeOptions' : {},
                 'images' : {
                     'example_images/arnie_vein1.jpg' : {
                         'index' : 1, 'options' : {}
@@ -84,6 +85,7 @@ class TexDefaultOptions(object):
             },
         2 : {
                 'options' : {},
+                'scopeOptions' : {'yshift' : '45cm'},
                 'images' : {
                     'example_images/arnie_ex1.jpg' : {
                         'index' : 1+8, 'options' : {'anchor' : 'north west'}
@@ -127,20 +129,37 @@ class TexDefaultOptions(object):
         'scope' : {
             'options' : {
                 'overlay' : None,
-                'opacity' : 0.5
+                'opacity' : 0.4
             }
         },
-        'options' : {
-            'fill' : 'red!50',
-            'color' : 'black',
+        'options' : {},
+        'connectorOptions' : {
+            'options' : {
+                'fill' : 'red!30',
+                'color' : 'black!70',
+                'inner sep' : 0,
+                'draw' : None,
+                'thin' : None
+            }
+        },
+        'frameOptions' : {
+            'color' : 'red!70',
+            'inner sep' : 0,
+            'draw' : None,
+            'ultra thick' : None
+        },
+        'indicatorOptions' : {
+            'fill' : 'red!0',
+            'color' : 'red!70',
             'inner sep' : 0,
             'draw' : None,
             'ultra thick' : None
         },
         'pairs' : {
-            (1,1) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}},
-            (2,3) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}},
-            (3,8) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}}
+            (1,2) : { 'frameOptions' : {'color' : 'blue!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'blue!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}},
+            (2,3) : { 'frameOptions' : {'color' : 'green!70'}, 'connectorOptions' : {'bend' : 5, 'options' : {'fill' : 'green!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}},
+            (3,8) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}},
+            (3,9) : { 'frameOptions' : {'color' : 'yellow!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'yellow!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}}
         },
         'bend' : 0,
         'indicatorNameBase' : 'indicator',
@@ -240,21 +259,25 @@ class OptionParser(object):
                 generalImageOptions = dict(lineContent['options'])
                 TexDefaultOptions.merge(options['options'], generalImageOptions)
                 options['options'] = generalImageOptions
+                fakeOptions = copy.deepcopy(options)
+                fakeOptions['nodeName'] = fieldOfViewScopeOptions['fakeNameBase'] + str(options['index'])
                 if prevKey > -1:
                     options['options']['right'] = 'of %s%d' % (fieldOfViewScopeOptions['nodeNameBase'], prevKey)
-                if idx == 0:
-                    fakeOptions = copy.deepcopy(options)
-                    fakeOptions['nodeName'] = fieldOfViewScopeOptions['fakeNameBase'] + str(options['index'])
-                    if prevKey > -1:
-                        fakeOptions['options']['right'] = 'of %s%d' % (fieldOfViewScopeOptions['fakeNameBase'], prevKey)
-                    fakeKeyValuePairs.append((image, fakeOptions))
-                keyValuePairs.append((image, options))
+                    fakeOptions['options']['right'] = 'of %s%d' % (fieldOfViewScopeOptions['fakeNameBase'], prevKey)
+                fakeKeyValuePairs.append((image, fakeOptions, line))
+                keyValuePairs.append((image, options, line))
                 prevKey = int(options['index'])
         fieldOfViewScopeOptions['images'] = {}
         fieldOfViewScopeOptions['fakes']  = {}
-        for key, value in keyValuePairs:
+        for key, value, line in keyValuePairs:
+            if not 'images' in fieldOfViewScopeOptions['lines'][line].keys():
+                fieldOfViewScopeOptions['lines'][line]['images'] = {}
+            fieldOfViewScopeOptions['lines'][line]['images'][key] = value
             fieldOfViewScopeOptions['images'][key] = value
-        for key, value in fakeKeyValuePairs:
+        for key, value, line in fakeKeyValuePairs:
+            if not 'fakes' in fieldOfViewScopeOptions['lines'][line].keys():
+                fieldOfViewScopeOptions['lines'][line]['fakes'] = {}
+            fieldOfViewScopeOptions['lines'][line]['fakes'][key] = value
             fieldOfViewScopeOptions['fakes'][key] = value
 
 
@@ -275,14 +298,24 @@ class OptionParser(object):
                     start += step
             bendValues = [int(x) for x in frange(-start, start+step, step)]
         assert str(len(bendValues)) + " bend values, but " + str(nPairs) + "  pairs" and len(bendValues) == nPairs
+        
+        generalPairOptions = dict(overlayOptions['options'])
+        TexDefaultOptions.merge(overlayOptions['frameOptions'], generalPairOptions)
+        overlayOptions['frameOptions'] = generalPairOptions
+        generalPairOptions = dict(overlayOptions['options'])
+        TexDefaultOptions.merge(overlayOptions['connectorOptions']['options'], generalPairOptions)
+        overlayOptions['connectorOptions']['options'] = generalPairOptions
+        generalPairOptions = dict(overlayOptions['options'])
+        TexDefaultOptions.merge(overlayOptions['indicatorOptions'], generalPairOptions)
+        overlayOptions['indicatorOptions'] = generalPairOptions
+            
         for idx, (pair, options) in enumerate(sorted(pairs.iteritems(),key=lambda x: int(x[0][0]))):
-            generalPairOptions = dict(overlayOptions['options'])
+            generalPairOptions = dict(overlayOptions['frameOptions'])
             TexDefaultOptions.merge(options['frameOptions'], generalPairOptions)
             options['frameOptions'] = generalPairOptions
-            generalPairOptions = dict(overlayOptions['options'])
-            TexDefaultOptions.merge(options['connectorOptions']['options'], generalPairOptions)
-            options['connectorOptions']['options'] = generalPairOptions
-            options['connectorOptions']['bend'] = bendValues[idx]
+            generalPairOptions = copy.deepcopy(overlayOptions['connectorOptions'])
+            TexDefaultOptions.merge(options['connectorOptions'], generalPairOptions)
+            options['connectorOptions'] = generalPairOptions
             generalPairOptions = dict(overlayOptions['options'])
             TexDefaultOptions.merge(options['indicatorOptions'], generalPairOptions)
             options['indicatorOptions'] = generalPairOptions

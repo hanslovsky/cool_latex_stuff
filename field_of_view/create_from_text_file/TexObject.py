@@ -190,6 +190,37 @@ class TexFieldOfViewScope(TexObject):
     def __init__(self, scopeOptions):
         super(TexFieldOfViewScope, self).__init__(scopeOptions)
 
+    def _putLinesToEnvironment(self, typeKey, nodeNameBase, indent):
+        scopes = []
+        for line, values in sorted(self.texOptions['lines'].iteritems(), key=lambda x: int(x[0])):
+            indentString = TexHelper.createIndentString(indent)
+            scopeString  = '\n%s%s\n' % (indentString,
+                                         TexEnvironmentCreator.begin('scope',
+                                                                     TexHelper.composeOptions(values['scopeOptions'])))
+            scopeString += '%s\n'
+            scopeString += '%s%s\n' % (indentString, TexEnvironmentCreator.end('scope'))
+            indent += self.texOptions['indentStep']
+            indentString = TexHelper.createIndentString(indent)
+            contentString = ''
+            imageDict = values[typeKey]
+            imageKeys = [x[0] for x in sorted(imageDict.iteritems(), key=lambda y: int(y[1]['index']))]
+            if len(imageKeys) > 0:
+                imageDict[imageKeys[0]]['options']['anchor'] = 'south west'
+
+            for idx, key in enumerate(imageKeys):
+                if typeKey == 'images':
+                    imageDict[key]['options']['transform shape'] = None
+                contentString += indentString +\
+                  TexHelper.createImageNodeString(key,
+                                                  imageDict[key]['index'],
+                                                  imageDict[key]['options'],
+                                                  nodeNameBase) + '\n'
+            indent -= self.texOptions['indentStep']
+            scopes.append(TexEnvironmentCreator([TexEnvironmentCreator([], contentString)], scopeString))
+        return scopes
+        
+        
+
     def _composeString(self):
         # get fake scope first
         scopeOptions = dict(self.texOptions['scope']['options'])
@@ -198,96 +229,143 @@ class TexFieldOfViewScope(TexObject):
         optionsString = TexHelper.composeOptions(scopeOptions)
         currIndent = 0
         indentStep = self.texOptions['indentStep']
-        composition = '\\begin{pgfonlayer}{%s}\n' % 'background'
-        currIndent += indentStep
+        allFakeNodes = ' '.join(('(%s)' % x[1]['nodeName'] for x in self.texOptions['fakes'].iteritems()))
+        pgfLayerString  = '\\begin{pgfonlayer}{%s}\n' % 'background'
+        pgfLayerString += '%s'
+        pgfLayerString += '\\node[fit=%s] (fakeFit) {};\n' % allFakeNodes
+        pgfLayerString += '\\end{pgfonlayer}'
 
-        composition += '%% fake scope \n %s\\begin{scope}%s\n' % (TexHelper.createIndentString(currIndent), optionsString)
-        currIndent += indentStep
-
-        scopeString = ''
-        indentString = TexHelper.createIndentString(currIndent)
-
-        imageDict = self.texOptions['fakes']
-        imageKeys = [x[0] for x in sorted(imageDict.iteritems(), key=lambda y: int(y[1]['index']))]
-
-        imageDict[imageKeys[0]]['options']['anchor'] = 'south west'
-        if len(imageKeys) > 0:
-            scopeString += indentString + TexHelper.createImageNodeString(imageKeys[0],
-                                                                          imageDict[imageKeys[0]]['index'],
-                                                                          imageDict[imageKeys[0]]['options'],
-                                                                          self.texOptions['fakeNameBase']) + '\n'
-        for idx, key in enumerate(imageKeys):
-            if idx == 0:
-                continue
-            scopeString += indentString + \
-              TexHelper.createImageNodeString(key,
-                                              imageDict[key]['index'],
-                                              imageDict[key]['options'],
-                                              self.texOptions['fakeNameBase']) + \
-              '\n'
-        composition += scopeString
-        currIndent -= indentStep
-        composition += '%s\\end{scope}\n' % TexHelper.createIndentString(currIndent)
         
+
+        currIndent += indentStep
+        currIndent += indentStep
+        scopes = self._putLinesToEnvironment('fakes',
+                                              self.texOptions['fakeNameBase'],
+                                              self.texOptions['indentStep'])
         currIndent -= indentStep
-
-        composition += '\\end{pgfonlayer}'
-
+        indentString = TexHelper.createIndentString(currIndent)
+        scopeString  = indentString + TexEnvironmentCreator.begin('scope', optionsString) + '\n'
+        scopeString += '%s\n' * len(scopes)
+        scopeString += indentString + TexEnvironmentCreator.end('scope')
+        scopeEnvironment = TexEnvironmentCreator(scopes, scopeString)
+        composition  = '\\begin{pgfinterruptboundingbox}\n'
+        composition += TexEnvironmentCreator([scopeEnvironment], pgfLayerString).getEnvironment() + '\n'
         composition += '''
-
-\\coordinate (width2) at ($(%s.east)-(%s.west)$);
+\\end{pgfinterruptboundingbox}
+\\coordinate (width2) at ($(fakeFit.east)-(fakeFit.west)$);
 \\ExtractCoordinate{width2}
 \\setlength{\\secondscope}{\\XCoord}
 \\pgfmathsetmacro{\\ratio}{\\firstscope/\\secondscope}
+'''
 
-''' % (imageDict[imageKeys[-1]]['nodeName'], imageDict[imageKeys[0]]['nodeName'])
+        
 
         # get real scope
-        scopeOptions = self.texOptions['scope']['options']
+        scopeOptions = dict(self.texOptions['scope']['options'])
         scopeOptions['scale'] = '\\ratio'
         optionsString = TexHelper.composeOptions(scopeOptions)
         currIndent = 0
         indentStep = self.texOptions['indentStep']
-        composition += '\\begin{pgfonlayer}{%s}\n ' % self.texOptions['layer']
+        pgfLayerString  = '\\begin{pgfonlayer}{%s}\n' % self.texOptions['layer']
+        pgfLayerString += '%s'
+        pgfLayerString += '\\end{pgfonlayer}'
+
         currIndent += indentStep
-
-        composition += '%% real scope \n %s\\begin{scope}%s\n' % (TexHelper.createIndentString(currIndent), optionsString)
-
         currIndent += indentStep
-
-        scopeString = ''
+        scopes = self._putLinesToEnvironment('images',
+                                              self.texOptions['nodeNameBase'],
+                                              self.texOptions['indentStep'])
+        currIndent -= indentStep
         indentString = TexHelper.createIndentString(currIndent)
-
-        imageDict = self.texOptions['images']
-        imageKeys = [x[0] for x in sorted(imageDict.iteritems(), key=lambda y: int(y[1]['index']))]
-
-        if len(imageKeys) > 0:
-            imageDict[imageKeys[0]]['options']['anchor'] = 'south west'
-            imageDict[imageKeys[0]]['options']['transform shape'] = None
-            scopeString += indentString + TexHelper.createImageNodeString(imageKeys[0],
-                                                                          imageDict[imageKeys[0]]['index'],
-                                                                          imageDict[imageKeys[0]]['options'],
-                                                                          self.texOptions['nodeNameBase']) + '\n'
-
-        for idx, key in enumerate(imageKeys):
-            if idx == 0:
-                continue
-            imageDict[key]['options']['transform shape'] = None
-            scopeString += indentString + \
-              TexHelper.createImageNodeString(key,
-                                              imageDict[key]['index'],
-                                              imageDict[key]['options'],
-                                              self.texOptions['nodeNameBase']) + \
-              '\n'
-        composition += scopeString
-        currIndent -= indentStep
-        composition += '%s\\end{scope}\n' % TexHelper.createIndentString(currIndent)
-                                                                          
-        currIndent -= indentStep
-
-        composition += '\\end{pgfonlayer}\n'
+        scopeString  = indentString + TexEnvironmentCreator.begin('scope', TexHelper.composeOptions(scopeOptions)) + '\n'
+        scopeString += '%s\n' * len(scopes)
+        scopeString += indentString + TexEnvironmentCreator.end('scope')
+        scopeEnvironment = TexEnvironmentCreator(scopes, scopeString)
+        composition += TexEnvironmentCreator([scopeEnvironment], pgfLayerString).getEnvironment() + '\n'
+        
 
         return composition
+    
+        # composition += '%% fake scope \n %s\\begin{scope}%s\n' % (TexHelper.createIndentString(currIndent), optionsString)
+#         currIndent += indentStep
+
+#         scopeString = ''
+#         indentString = TexHelper.createIndentString(currIndent)
+
+#         imageDict = self.texOptions['fakes']
+#         imageKeys = [x[0] for x in sorted(imageDict.iteritems(), key=lambda y: int(y[1]['index']))]
+
+#         imageDict[imageKeys[0]]['options']['anchor'] = 'south west'
+#         if len(imageKeys) > 0:
+#             scopeString += indentString + TexHelper.createImageNodeString(imageKeys[0],
+#                                                                           imageDict[imageKeys[0]]['index'],
+#                                                                           imageDict[imageKeys[0]]['options'],
+#                                                                           self.texOptions['fakeNameBase']) + '\n'
+#         for idx, key in enumerate(imageKeys):
+#             if idx == 0:
+#                 continue
+#             scopeString += indentString + \
+#               TexHelper.createImageNodeString(key,
+#                                               imageDict[key]['index'],
+#                                               imageDict[key]['options'],
+#                                               self.texOptions['fakeNameBase']) + \
+#               '\n'
+#         composition += scopeString
+#         currIndent -= indentStep
+#         composition += '%s\\end{scope}\n' % TexHelper.createIndentString(currIndent)
+        
+#         currIndent -= indentStep
+
+#         composition += '\\end{pgfonlayer}'
+
+         
+
+        # get real scope
+        # scopeOptions = self.texOptions['scope']['options']
+        # scopeOptions['scale'] = '\\ratio'
+        # optionsString = TexHelper.composeOptions(scopeOptions)
+        # currIndent = 0
+        # indentStep = self.texOptions['indentStep']
+        # composition += '\\begin{pgfonlayer}{%s}\n ' % self.texOptions['layer']
+        # currIndent += indentStep
+
+        # composition += '%% real scope \n %s\\begin{scope}%s\n' % (TexHelper.createIndentString(currIndent), optionsString)
+
+        # currIndent += indentStep
+
+        # scopeString = ''
+        # indentString = TexHelper.createIndentString(currIndent)
+
+        # imageDict = self.texOptions['images']
+        # imageKeys = [x[0] for x in sorted(imageDict.iteritems(), key=lambda y: int(y[1]['index']))]
+
+        # if len(imageKeys) > 0:
+        #     imageDict[imageKeys[0]]['options']['anchor'] = 'south west'
+        #     imageDict[imageKeys[0]]['options']['transform shape'] = None
+        #     scopeString += indentString + TexHelper.createImageNodeString(imageKeys[0],
+        #                                                                   imageDict[imageKeys[0]]['index'],
+        #                                                                   imageDict[imageKeys[0]]['options'],
+        #                                                                   self.texOptions['nodeNameBase']) + '\n'
+
+        # for idx, key in enumerate(imageKeys):
+        #     if idx == 0:
+        #         continue
+        #     imageDict[key]['options']['transform shape'] = None
+        #     scopeString += indentString + \
+        #       TexHelper.createImageNodeString(key,
+        #                                       imageDict[key]['index'],
+        #                                       imageDict[key]['options'],
+        #                                       self.texOptions['nodeNameBase']) + \
+        #       '\n'
+        # composition += scopeString
+        # currIndent -= indentStep
+        # composition += '%s\\end{scope}\n' % TexHelper.createIndentString(currIndent)
+                                                                          
+        # currIndent -= indentStep
+
+        # composition += '\\end{pgfonlayer}\n'
+
+        # return composition
 
 
 class TexStandaloneDecorator(TexObject):
@@ -358,12 +436,13 @@ class TexOverlayScope(TexObject):
             scopeOptions['y'] = '($(%s.north west)-(%s.south west)$)' % (values['nodeFrom'], values['nodeFrom'])
             scopeString = '''
 %s%s
-%s\\draw[red, ultra thick, opacity=0.7] ($%s+(%s.south west)$) rectangle ($%s+(%s.south west)$);
+%s\\draw%s ($%s+(%s.south west)$) rectangle ($%s+(%s.south west)$);
 %s
 %s%s
 ''' % (TexHelper.createIndentString(self.texOptions['indentStep']),
        TexEnvironmentCreator.begin('scope', TexHelper.composeOptions(scopeOptions)),
        TexHelper.createIndentString(2*self.texOptions['indentStep']),
+       TexHelper.composeOptions(values['indicatorOptions']),
        relPos,
        values['nodeFrom'],
        (relPos[0] + relRes[0], relPos[1] + relRes[1]),
