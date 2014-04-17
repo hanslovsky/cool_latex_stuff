@@ -8,8 +8,8 @@ class TexDefaultOptions(object):
         'indent' : 0,
         'indentStep' : 4,
         'tikzpicture' : {
-            'framed' : None,
-            'background rectangle/.style' : '{thin, top color=black!80, bottom color=black!0}'
+            #'framed' : None,
+            #'background rectangle/.style' : '{thin, top color=black!80, bottom color=black!0}'
         },
         'scale' : '1.0\\linewidth',
         'packages' : [('','tikz'), ('', 'pgf')],

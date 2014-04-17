@@ -248,14 +248,13 @@ class TexFieldOfViewScope(TexObject):
         scopeString += '%s\n' * len(scopes)
         scopeString += indentString + TexEnvironmentCreator.end('scope')
         scopeEnvironment = TexEnvironmentCreator(scopes, scopeString)
-        composition  = '\\begin{pgfinterruptboundingbox}\n'
-        composition += TexEnvironmentCreator([scopeEnvironment], pgfLayerString).getEnvironment() + '\n'
+        composition = TexEnvironmentCreator([scopeEnvironment], pgfLayerString).getEnvironment() + '\n'
         composition += '''
-\\end{pgfinterruptboundingbox}
 \\coordinate (width2) at ($(fakeFit.east)-(fakeFit.west)$);
 \\ExtractCoordinate{width2}
 \\setlength{\\secondscope}{\\XCoord}
 \\pgfmathsetmacro{\\ratio}{\\firstscope/\\secondscope}
+\\pgfresetboundingbox
 '''
 
         
