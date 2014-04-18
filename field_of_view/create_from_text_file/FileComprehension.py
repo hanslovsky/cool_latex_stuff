@@ -163,7 +163,9 @@ class TexDefaultOptions(object):
             (1,2,1) : { 'frameOptions' : {'color' : 'blue!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'blue!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 1},
             (2,3,2) : { 'frameOptions' : {'color' : 'green!70'}, 'connectorOptions' : {'bend' : 5, 'options' : {'fill' : 'green!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 1},
             (3,8,3) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}, 'type' : 1},
-            (3,9,4) : { 'frameOptions' : {'color' : 'yellow!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'yellow!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2}
+            (3,9,4) : { 'frameOptions' : {'color' : 'yellow!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'yellow!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2},
+            (1,14,5) : { 'frameOptions' : {'color' : 'orange!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'orange!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2},
+            (2,11,6) : { 'frameOptions' : {'color' : 'magenta!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'magenta!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2}
         },
         'bend' : 0,
         'indicatorNameBase' : 'indicator',
