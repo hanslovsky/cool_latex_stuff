@@ -147,6 +147,8 @@ class TexCompleteScope(TexObject):
         currIndent += indentStep
         indentString = TexHelper.createIndentString(currIndent)
 
+        scopeNodes = []
+
         imageDict = self.texOptions['images']
         imageKeys = [x[0] for x in sorted(imageDict.iteritems(), key=lambda y: int(y[1]['index']))]
         imageDict[imageKeys[0]]['options']['anchor'] = 'south west'
@@ -156,6 +158,7 @@ class TexCompleteScope(TexObject):
                                                                           imageDict[imageKeys[0]]['options'],
                                                                           self.texOptions['nodeNameBase']) + '\n'
         for idx, key in enumerate(imageKeys):
+            scopeNodes.append(imageDict[key]['nodeName'])
             if idx == 0:
                 continue
             # imageDict[key]['options']['xshift'] =  
@@ -181,6 +184,10 @@ class TexCompleteScope(TexObject):
 \\ExtractCoordinate{width1}
 \\setlength{\\firstscope}{\\XCoord}
 ''' % (imageDict[imageKeys[-1]]['nodeName'], imageDict[imageKeys[0]]['nodeName'])
+
+        composition += '''
+\\node[inner sep=0, fit=%s] (completeScopeHelper) {};
+''' % ' '.join('(%s)' % x  for x in scopeNodes)
     
 
         return composition
@@ -255,6 +262,7 @@ class TexFieldOfViewScope(TexObject):
 \\setlength{\\secondscope}{\\XCoord}
 \\pgfmathsetmacro{\\ratio}{\\firstscope/\\secondscope}
 \\pgfresetboundingbox
+\\node[fit=(completeScopeHelper), inner sep=0] {};
 '''
 
         
