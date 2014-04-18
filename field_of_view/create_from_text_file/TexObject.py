@@ -232,7 +232,7 @@ class TexFieldOfViewScope(TexObject):
         allFakeNodes = ' '.join(('(%s)' % x[1]['nodeName'] for x in self.texOptions['fakes'].iteritems()))
         pgfLayerString  = '\\begin{pgfonlayer}{%s}\n' % 'background'
         pgfLayerString += '%s'
-        pgfLayerString += '\\node[fit=%s] (fakeFit) {};\n' % allFakeNodes
+        pgfLayerString += '\\node[inner sep = 0, fit=%s] (fakeFit) {};\n' % allFakeNodes
         pgfLayerString += '\\end{pgfonlayer}'
 
         
@@ -413,21 +413,23 @@ class TexOverlayScope(TexObject):
 
     def _createIndicators(self):
         scopeEnvironments = []
-        relPos = self.texOptions['relativeIndicatorPosition']
-        relRes = self.texOptions['relativeIndicatorResolution']
-        coordinates = {}
-        coordinates['SouthWest'] = (min(relPos[0], relPos[0] + relRes[0]), min(relPos[1], relPos[1] + relRes[1]))
-        coordinates['SouthEast'] = (max(relPos[0], relPos[0] + relRes[0]), min(relPos[1], relPos[1] + relRes[1]))
-        coordinates['NorthEast'] = (max(relPos[0], relPos[0] + relRes[0]), max(relPos[1], relPos[1] + relRes[1]))
-        coordinates['NorthWest'] = (min(relPos[0], relPos[0] + relRes[0]), max(relPos[1], relPos[1] + relRes[1]))
+        # relPos = self.texOptions['relativeIndicatorPosition']
+        # relRes = self.texOptions['relativeIndicatorResolution']
         for pair, values in self.texOptions['pairs'].iteritems():
+            relPos = values['relativeIndicatorPosition']
+            relRes = values['relativeIndicatorResolution']
+            coordinates = {}
+            coordinates['SouthWest'] = (min(relPos[0], relPos[0] + relRes[0]), min(relPos[1], relPos[1] + relRes[1]))
+            coordinates['SouthEast'] = (max(relPos[0], relPos[0] + relRes[0]), min(relPos[1], relPos[1] + relRes[1]))
+            coordinates['NorthEast'] = (max(relPos[0], relPos[0] + relRes[0]), max(relPos[1], relPos[1] + relRes[1]))
+            coordinates['NorthWest'] = (min(relPos[0], relPos[0] + relRes[0]), max(relPos[1], relPos[1] + relRes[1]))
             coordinateString = ''
             for key, value in coordinates.iteritems():
                 coordinateString += '''%s\\coordinate (%s%s%s) at ($(%s.south west)+%s$);\n
 ''' % (TexHelper.createIndentString(2*self.texOptions['indentStep']),
        self.texOptions['indicatorNameBase'],
        key,
-       pair[0],
+       pair[2],
        values['nodeFrom'],
        value)
             scopeOptions = dict(self.texOptions['scope']['options'])
@@ -499,7 +501,7 @@ class TexOverlayScope(TexObject):
        TexHelper.composeOptions(values['connectorOptions']['options']),
        self.texOptions['indicatorNameBase'],
        indicator[1],
-       pair[0],
+       pair[2],
        values['connectorOptions']['bend'],
        self.texOptions['frameNameBase'],
        pair[1],
@@ -510,7 +512,7 @@ class TexOverlayScope(TexObject):
        values['connectorOptions']['bend'],
        self.texOptions['indicatorNameBase'],
        indicator[2],
-       pair[0])
+       pair[2])
 
         scopeString  = TexHelper.createIndentString(self.texOptions['indentStep'])
         scopeString += TexEnvironmentCreator.begin('scope', TexHelper.composeOptions(self.texOptions['scope']['options']))

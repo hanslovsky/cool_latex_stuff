@@ -18,7 +18,11 @@ class TexDefaultOptions(object):
     },
     'completeScope' : {
         'layer' : 'lower',
-        'imageResolution' : (1600, 1097),
+        'meta' : {
+            1 : { 
+                'imageResolution' : (1600, 1097)
+            }
+        },
         'scope' : {
             'options' : {
                 'opacity' : 1.0
@@ -156,16 +160,26 @@ class TexDefaultOptions(object):
             'ultra thick' : None
         },
         'pairs' : {
-            (1,2) : { 'frameOptions' : {'color' : 'blue!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'blue!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}},
-            (2,3) : { 'frameOptions' : {'color' : 'green!70'}, 'connectorOptions' : {'bend' : 5, 'options' : {'fill' : 'green!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}},
-            (3,8) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}},
-            (3,9) : { 'frameOptions' : {'color' : 'yellow!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'yellow!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}}
+            (1,2,1) : { 'frameOptions' : {'color' : 'blue!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'blue!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 1},
+            (2,3,2) : { 'frameOptions' : {'color' : 'green!70'}, 'connectorOptions' : {'bend' : 5, 'options' : {'fill' : 'green!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 1},
+            (3,8,3) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}, 'type' : 1},
+            (3,9,4) : { 'frameOptions' : {'color' : 'yellow!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'yellow!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2}
         },
         'bend' : 0,
         'indicatorNameBase' : 'indicator',
         'frameNameBase' : 'frame',
-        'indicatorResolution' : (200, 200),
-        'indicatorPosition' : (70+200, 70+200)
+        'meta' : {
+            1 : {
+                'originalKey' : 1,
+                'indicatorResolution' : (200, 200),
+                'indicatorPosition' : (70+200, 70+200)
+            },
+            2 : {
+                'originalKey' : 1,
+                'indicatorResolution' : (200, 200),
+                'indicatorPosition' : (70, 70)
+            }
+        }
     }
     }
         
@@ -333,12 +347,22 @@ class OptionParser(object):
             options['nodeFrom'] = findNodeName(pair[0], completeScopeImages)
             options['nodeTo']   = findNodeName(pair[1], fieldOfViewImages)
             options['indicatorName'] = overlayOptions['indicatorNameBase'] + str(idx)
-            overlayOptions['relativeIndicatorPosition'] = \
-              (float(overlayOptions['indicatorPosition'][0])/completeScopeOptions['imageResolution'][0],
-               float(overlayOptions['indicatorPosition'][1])/completeScopeOptions['imageResolution'][1])
-            overlayOptions['relativeIndicatorResolution'] = \
-              (float(overlayOptions['indicatorResolution'][0])/completeScopeOptions['imageResolution'][0],
-               float(overlayOptions['indicatorResolution'][1])/completeScopeOptions['imageResolution'][1])
+            typeId = options['type']
+            originalKey = overlayOptions['meta'][typeId]['originalKey']
+            position = overlayOptions['meta'][typeId]['indicatorPosition']
+            resolution = overlayOptions['meta'][typeId]['indicatorResolution']
+            options['relativeIndicatorPosition'] = \
+              (float(position[0])/completeScopeOptions['meta'][originalKey]['imageResolution'][0],
+               float(position[1])/completeScopeOptions['meta'][originalKey]['imageResolution'][1])
+            # overlayOptions['meta'][typeId]['relativeIndicatorPosition'] = \
+            #   (float(position[0])/completeScopeOptions['meta'][originalKey]['imageResolution'][0],
+            #    float(position[1])/completeScopeOptions['meta'][originalKey]['imageResolution'][1])
+            options['relativeIndicatorResolution'] = \
+              (float(resolution[0])/completeScopeOptions['meta'][originalKey]['imageResolution'][0],
+               float(resolution[1])/completeScopeOptions['meta'][originalKey]['imageResolution'][1])
+            # overlayOptions['meta'][typeId]['relativeIndicatorResolution'] = \
+            #   (float(overlayOptions['indicatorResolution'][0])/completeScopeOptions['imageResolution'][0],
+            #    float(overlayOptions['indicatorResolution'][1])/completeScopeOptions['imageResolution'][1])
                                                               
             options['frameName'] = overlayOptions['frameNameBase'] + str(idx)
             # calculate relative position in image!
