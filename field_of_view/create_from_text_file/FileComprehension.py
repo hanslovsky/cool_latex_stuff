@@ -43,18 +43,19 @@ class TexDefaultOptions(object):
         'options' : {},
     },
     'fieldOfViewScope' : {
-        'layer' : 'upper',
         'options' : {},
         'scope' : {
             'options' : {
                 'opacity' : 1.0,
-                'yshift' : '-15cm'
+                'yshift' : '-5cm'
             }
         },
         'lines' : {
             1 : {
                 'options' : {},
                 'scopeOptions' : {},
+                'layer' : 'upper',
+                'scale' : 'True',
                 'images' : {
                     'example_images/arnie_vein1.jpg' : {
                         'index' : 1, 'options' : {}
@@ -89,7 +90,9 @@ class TexDefaultOptions(object):
             },
         2 : {
                 'options' : {},
-                'scopeOptions' : {'yshift' : '45cm'},
+                'scopeOptions' : {'yshift' : '-17cm'},
+                'layer' : 'upper',
+                'scale' : True,
                 'images' : {
                     'example_images/arnie_ex1.jpg' : {
                         'index' : 1+8, 'options' : {'anchor' : 'north west'}
@@ -102,23 +105,9 @@ class TexDefaultOptions(object):
                     },
                     'example_images/arnie_ex4.jpg' : {
                         'index' : 4+8, 'options' : {}
-                    }
-                    ,
-                    'example_images/arnie_ex5.jpg' : {
-                        'index' : 5+8, 'options' : {}
-                    }
-                    ,
+                    },
                     'example_images/arnie_ex6.jpg' : {
                         'index' : 6+8, 'options' : {}
-                    }
-                    ,
-                    'example_images/arnie_ex7.jpg' : {
-                        'index' : 7+8, 'options' : {}
-                    }
-                    ,
-                    'example_images/arnie_ex8.jpg' : {
-                        'index' : 8+8
-                        , 'options' : {}
                     }
                 }
             }
@@ -163,8 +152,8 @@ class TexDefaultOptions(object):
             (1,2,1) : { 'frameOptions' : {'color' : 'blue!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'blue!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 1},
             (2,3,2) : { 'frameOptions' : {'color' : 'green!70'}, 'connectorOptions' : {'bend' : 5, 'options' : {'fill' : 'green!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 1},
             (3,8,3) : { 'frameOptions' : {}, 'connectorOptions' : {'bend' : 0, 'options' : {}}, 'indicatorOptions' : {}, 'type' : 1},
-            (3,9,4) : { 'frameOptions' : {'color' : 'yellow!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'yellow!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2},
-            (1,14,5) : { 'frameOptions' : {'color' : 'orange!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'orange!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2},
+            (3,12,4) : { 'frameOptions' : {'color' : 'yellow!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'yellow!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2},
+            (1,9,5) : { 'frameOptions' : {'color' : 'orange!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'orange!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2},
             (2,11,6) : { 'frameOptions' : {'color' : 'magenta!70'}, 'connectorOptions' : {'bend' : 0, 'options' : {'fill' : 'magenta!30', 'color' : 'black!70'}}, 'indicatorOptions' : {}, 'type' : 2}
         },
         'bend' : 0,
