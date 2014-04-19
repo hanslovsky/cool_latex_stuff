@@ -163,12 +163,12 @@ class TexDefaultOptions(object):
             1 : {
                 'originalKey' : 1,
                 'indicatorResolution' : (200, 200),
-                'indicatorPosition' : (70+200, 70+200)
+                'indicatorPosition' : (70+200, 827)
             },
             2 : {
                 'originalKey' : 1,
                 'indicatorResolution' : (200, 200),
-                'indicatorPosition' : (70, 70)
+                'indicatorPosition' : (70, 1027)
             }
         }
     }
@@ -340,8 +340,10 @@ class OptionParser(object):
             options['indicatorName'] = overlayOptions['indicatorNameBase'] + str(idx)
             typeId = options['type']
             originalKey = overlayOptions['meta'][typeId]['originalKey']
-            position = overlayOptions['meta'][typeId]['indicatorPosition']
-            resolution = overlayOptions['meta'][typeId]['indicatorResolution']
+            position = list(overlayOptions['meta'][typeId]['indicatorPosition'])
+            resolution = list(overlayOptions['meta'][typeId]['indicatorResolution'])
+            # take care of inverted y axis for tikz
+            position[1]   = completeScopeOptions['meta'][originalKey]['imageResolution'][1] - position[1]
             options['relativeIndicatorPosition'] = \
               (float(position[0])/completeScopeOptions['meta'][originalKey]['imageResolution'][0],
                float(position[1])/completeScopeOptions['meta'][originalKey]['imageResolution'][1])
